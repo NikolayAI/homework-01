@@ -13,6 +13,9 @@ app.use(bodyParser.json());
 app.use(express.json());
 
 app
+  .get('/', (req, res) => {
+    res.send('hello')
+  })
   .get('/hs_01/api/bloggers', BloggersController.getBloggers)
   .post('/hs_01/api/bloggers', BloggersController.createBlogger)
   .get('/hs_01/api/bloggers/:id', BloggersController.getBlogger)
