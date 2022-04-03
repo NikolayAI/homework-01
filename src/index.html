@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Front-end</title>
+</head>
+<body>
+<h1>Front-end</h1>
+
+
+<button id="create_blogger">create</button>
+<input id="create_name" placeholder="новое имя" />
+<input id="create_youtube_url" placeholder="новая ссылка на Ютуб" />
+<hr>
+<button id="read_all_bloggers">read all bloggers</button>
+<hr>
+<button id="read_single_blogger">read blogger by id</button>
+<input id="read_id" placeholder="bloggerId" />
+<hr>
+<button id="update_blogger">update</button>
+<input id="update_id" placeholder="bloggerId" />
+<input id="update_name" placeholder="обновить имя" />
+<input id="update_youtube_url" placeholder="обновить ссылку на Ютуб" />
+<hr>
+<button id="delete_blogger">delete</button>
+<input id="delete_id" placeholder="bloggerId" />
+<hr>
+
+
+<div id="result"></div>
+<script>
+  read_all_bloggers.onclick = () => {
+    fetch('http://localhost:4000/hs_01/api/bloggers')
+      .then(res => res.json())
+      .then(data => result.innerHTML = JSON.stringify(data));
+  };
+  read_single_blogger.onclick = () => {
+    fetch('http://localhost:4000/hs_01/api/bloggers/' + read_id.value)
+      .then(res => res.json())
+      .then(data => result.innerHTML = JSON.stringify(data));
+  };
+  create_blogger.onclick = () => {
+    fetch('http://localhost:4000/hs_01/api/bloggers', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: create_name.value,
+        youtubeUrl: create_youtube_url.value,
+      }),
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    })
+      .then(res => res.json())
+      .then(data => result.innerHTML = JSON.stringify(data));
+  };
+  update_blogger.onclick = () => {
+    fetch('http://localhost:4000/hs_01/api/bloggers/' + update_id.value, {
+      method: 'PUT',
+      body: JSON.stringify({
+        name: update_name.value,
+        youtubeUrl: update_youtube_url.value,
+      }),
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    })
+      .then(res => res.json())
+      .then(data => result.innerHTML = JSON.stringify(data));
+  };
+  delete_blogger.onclick = () => {
+    fetch('http://localhost:4000/hs_01/api/bloggers/' + delete_id.value, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    })
+      .then(res => res.json())
+      .then(data => result.innerHTML = JSON.stringify(data));
+  };
+</script>
+</body>
+</html>
