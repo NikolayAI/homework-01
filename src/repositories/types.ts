@@ -10,6 +10,14 @@ export interface IPost {
   shortDescription: string | null;
   content: string | null;
   bloggerId: number;
+}
+
+export interface IPostDto {
+  id: number;
+  title: string | null;
+  shortDescription: string | null;
+  content: string | null;
+  bloggerId: number;
   bloggerName: string | null;
 }
 
