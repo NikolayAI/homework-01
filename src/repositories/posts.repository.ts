@@ -2,23 +2,20 @@ import { posts } from './db';
 import { IPost } from './types';
 
 export class PostsRepository {
-  private static items: IPost[] = [...posts];
-
-  static getItems(): IPost[] {
-    return this.items;
+  static async findAll(): Promise<IPost[]> {
+    return await posts.find({}).toArray();
   }
 
-  static getItem({ id }: { id: number }): IPost | null {
-    const item = this.items.find((item) => item.id === id);
-    return item ?? null;
+  static async findOne({ id }: { id: number }): Promise<IPost | null> {
+    return await posts.findOne({ id });
   }
 
-  static createItem({
+  static async create({
     title,
     content,
     shortDescription,
     bloggerId
-  }: Omit<IPost, 'id'>): IPost {
+  }: Omit<IPost, 'id'>): Promise<IPost> {
     const newItem: IPost = {
       id: Number(new Date()),
       bloggerId,
@@ -26,34 +23,31 @@ export class PostsRepository {
       content,
       shortDescription,
     };
-    this.items.push(newItem);
+    await posts.insertOne(newItem);
     return newItem;
   }
 
-  static updateItem({
+  static async update({
     id,
     title,
     content,
     shortDescription,
     bloggerId,
-  }: IPost): IPost | null {
-    const item = this.getItem({ id });
-    if (item) {
-      item.title = title ? title : item.title;
-      item.content = content ? content : item.content;
-      item.shortDescription = shortDescription ? shortDescription : item.shortDescription;
-      item.bloggerId = bloggerId ? bloggerId : item.bloggerId;
-      return item;
-    }
-    return null;
+  }: IPost): Promise<boolean> {
+    const updatedItem = await posts
+      .updateOne({ id }, {
+        $set: {
+          title,
+          content,
+          shortDescription,
+          bloggerId
+        }
+      });
+    return updatedItem.matchedCount === 1;
   }
 
-  static deleteItem({ id }: { id: number }): boolean {
-    const item = this.getItem({ id });
-    if (item) {
-      this.items = this.items.filter((item) => item.id !== id);
-      return true;
-    }
-    return false;
+  static async remove({ id }: { id: number }): Promise<boolean> {
+    const removedItem = await posts.deleteOne({ id });
+    return removedItem.deletedCount === 1;
   }
 }

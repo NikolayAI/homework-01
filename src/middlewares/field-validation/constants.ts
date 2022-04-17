@@ -1,0 +1,2 @@
+export const POST_SHORT_DESCRIPTION_MAX_LENGTH = 100;
+export const youtubeUrlMatch = new RegExp('^((?:https?:)?\\/\\/)?((?:www|m)\\.)?((?:youtube\\.com|youtu.be))(\\/(?:[\\w\\-]+\\?v=|embed\\/|v\\/)?)([\\w\\-]+)(\\S+)?$');

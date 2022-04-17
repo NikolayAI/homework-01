@@ -1,76 +1,46 @@
 import { Request, Response, Router } from 'express';
-
-import { BloggersRepository } from '../repositories/bloggers.repository';
-import { PostsRepository } from '../repositories/posts.repository';
 import { IProblemDetails } from '../repositories/types';
-import { POST_SHORT_DESCRIPTION_MAX_LENGTH } from './constants';
+import {
+  validatePostId,
+  validatePosts,
+  validateShortDescription
+} from '../middlewares/field-validation/posts-field-validation.middleware';
+import { handleFieldsErrors } from '../middlewares/field-validation/handle-fields-errors';
+import { PostsService } from '../domain/posts.service';
 
 export const postsRouter = Router({});
 
-postsRouter
-  .get('/', (req: Request, res: Response) => {
-    const items = PostsRepository.getItems();
-    const itemsDto = items.map((item) => ({
-      ...item,
-      bloggerName: BloggersRepository.getItem({ id: item.bloggerId })?.name ?? null,
-    }));
-    res.send(itemsDto);
-  })
-  .post('/', (req: Request, res: Response) => {
-    const {
-      title,
-      shortDescription,
-      content,
-      bloggerId,
-    } = req.body || {};
+postsRouter.get('/', async (req: Request, res: Response) => {
+  const items = await PostsService.findAll();
+  res.send(items);
+});
 
-    if (!title || !shortDescription || !content || !bloggerId) {
-      const problems: IProblemDetails = {
-        type: 'some type',
-        title: 'some title',
-        status: 400,
-        instance: 'some instance',
-        detail: 'title, short description, content, blogger id is required',
-      };
-      return res.status(400).send(problems);
-    }
+postsRouter.post('/', validatePosts(), async (req: Request, res: Response) => {
+  const newItem = await PostsService.create({
+    title: req.body?.title,
+    content: req.body?.content,
+    shortDescription: req.body?.shortDescription,
+    bloggerId: req.body?.bloggerId
+  });
+  res.status(201).send(newItem);
+});
 
-    if (shortDescription?.length > POST_SHORT_DESCRIPTION_MAX_LENGTH) {
-      const problems: IProblemDetails = {
-        type: 'some type',
-        title: 'some title',
-        status: 400,
-        instance: 'some instance',
-        detail: 'shortDescription should be less than 100 symbols',
-      };
-      return res.status(400).send(problems);
-    }
-
-    const newItem = PostsRepository.createItem({
-      title,
-      content,
-      shortDescription,
-      bloggerId
-    });
-    const newItemDto = {
-      ...newItem,
-      bloggerName: BloggersRepository.getItem({ id: newItem.bloggerId })?.name ?? null,
-    };
-
-    res.status(201).send(newItemDto);
-  })
-  .get('/:id', (req: Request, res: Response) => {
-    const item = PostsRepository.getItem({ id: Number(req.params.id) });
+postsRouter.get(
+  '/:id',
+  validatePostId(),
+  handleFieldsErrors(),
+  async (req: Request, res: Response) => {
+    const item = await PostsService.findOne({ id: Number(req.params.id) });
     if (!item) return res.send(404);
-    if (item) {
-      const itemDto = {
-        ...item,
-        bloggerName: BloggersRepository.getItem({ id: item.bloggerId })?.name ?? null,
-      };
-      return res.send(itemDto);
-    }
-  })
-  .post('/:id', (req: Request, res: Response) => {
+    return res.send(item);
+  });
+
+postsRouter.put(
+  '/:id',
+  validatePostId(),
+  validateShortDescription(),
+  handleFieldsErrors(),
+  async (req: Request, res: Response) => {
     const {
       title,
       shortDescription,
@@ -78,18 +48,7 @@ postsRouter
       bloggerId,
     } = req.body || {};
 
-    if (shortDescription?.length > POST_SHORT_DESCRIPTION_MAX_LENGTH) {
-      const problems: IProblemDetails = {
-        type: 'some type',
-        title: 'some title',
-        status: 400,
-        instance: 'some instance',
-        detail: 'shortDescription should be less than 100 symbols',
-      };
-      res.status(400).send(problems);
-    }
-
-    const updatedItem = PostsRepository.updateItem({
+    const updatedItem = await PostsService.update({
       id: Number(req.params.id),
       bloggerId,
       title,
@@ -109,9 +68,14 @@ postsRouter
     }
 
     if (updatedItem) res.send(204);
-  })
-  .delete('/:id', (req: Request, res: Response) => {
-    const isItemDeleted = PostsRepository.deleteItem({ id: Number(req.params.id) });
+  });
+
+postsRouter.delete(
+  '/:id',
+  validatePostId(),
+  handleFieldsErrors(),
+  async (req: Request, res: Response) => {
+    const isItemDeleted = await PostsService.remove({ id: Number(req.params.id) });
 
     if (!isItemDeleted) {
       const problems: IProblemDetails = {
